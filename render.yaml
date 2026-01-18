@@ -60,10 +60,8 @@ services:
   - type: pserv
     name: memory-postgres
     plan: free
-    ipAllowList: []
 
   # Redis Cache
   - type: redis
     name: memory-redis
     plan: free
-    ipAllowList: []
