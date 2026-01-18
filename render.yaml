@@ -4,7 +4,7 @@ services:
     name: memory-ai-backend
     runtime: python
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt && python -c "from app.database import engine, Base; from app.models.user import User; from app.models.memory import Memory; from app.models.social_account import SocialAccount; from app.models.permission import Permission; Base.metadata.create_all(bind=engine)"
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
