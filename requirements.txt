@@ -27,7 +27,7 @@ google-auth-httplib2==0.2.0
 google-api-python-client==2.116.0
 
 # File Processing (lightweight alternatives)
-pypdf==3.17.0
+PyPDF2==3.0.1
 
 # Utilities
 pydantic==2.5.3
