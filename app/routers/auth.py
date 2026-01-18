@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.user import UserCreate, UserLogin, UserResponse, Token
 from app.models.user import User
-from app.utils.security import get_password_hash, verify_password, create_access_token, create_refresh_token
+from app.utils.security import get_password_hash, verify_password, create_access_token, create_refresh_token, verify_token
 
 router = APIRouter()
+security = HTTPBearer()
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -40,12 +42,15 @@ async def register(user_data: UserCreate, db: Session = Depends(get_db)):
 @router.post("/login", response_model=Token)
 async def login(credentials: UserLogin, db: Session = Depends(get_db)):
     """Login user and return JWT tokens"""
-    user = db.query(User).filter(User.email == credentials.email).first()
+    # Accept both email and username
+    user = db.query(User).filter(
+        (User.email == credentials.username) | (User.username == credentials.username)
+    ).first()
     
     if not user or not verify_password(credentials.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
+            detail="Incorrect username/email or password"
         )
     
     if not user.is_active:
@@ -95,3 +100,30 @@ async def refresh_token(refresh_token: str, db: Session = Depends(get_db)):
         "refresh_token": new_refresh_token,
         "token_type": "bearer"
     }
+
+
+@router.get("/me", response_model=UserResponse)
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+):
+    """Get current authenticated user"""
+    token = credentials.credentials
+    payload = verify_token(token)
+    
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
+    
+    user_id = payload.get("user_id")
+    user = db.query(User).filter(User.id == user_id).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    return user
