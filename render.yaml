@@ -59,12 +59,8 @@ services:
   # PostgreSQL Database
   - type: pserv
     name: memory-postgres
-    runtime: postgresql
     plan: free
     ipAllowList: []
-    databases:
-      - name: memory_service
-        user: memory_user
 
   # Redis Cache
   - type: redis
