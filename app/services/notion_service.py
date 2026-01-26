@@ -52,8 +52,8 @@ class NotionService:
             
             data = {
                 "grant_type": "authorization_code",
-                "code": code,
-                "redirect_uri": redirect_uri
+                "code": code
+                # 'redirect_uri' omitted as workaround
             }
             
             response = requests.post(
