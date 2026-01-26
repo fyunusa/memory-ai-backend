@@ -21,10 +21,9 @@ class NotionService:
     
     def get_oauth_url(self, state: str = "random_state") -> str:
         """Generate Notion OAuth URL"""
-        # Note: You need to create a Notion integration at https://www.notion.so/my-integrations
         client_id = getattr(settings, 'NOTION_CLIENT_ID', 'your-notion-client-id')
-        redirect_uri = getattr(settings, 'NOTION_REDIRECT_URI', 'http://localhost:8000/oauth/notion/callback')
-        
+        redirect_uri = getattr(settings, 'NOTION_REDIRECT_URI', 'https://memory-ai-backend.onrender.com/oauth/notion/callback')
+        print(f"[Notion OAuth] get_oauth_url using redirect_uri: {redirect_uri}")
         return (
             f"https://api.notion.com/v1/oauth/authorize"
             f"?client_id={client_id}"
@@ -39,29 +38,25 @@ class NotionService:
         try:
             client_id = getattr(settings, 'NOTION_CLIENT_ID', '')
             client_secret = getattr(settings, 'NOTION_CLIENT_SECRET', '')
-            redirect_uri = getattr(settings, 'NOTION_REDIRECT_URI', 'http://localhost:8000/oauth/notion/callback')
-            
+            redirect_uri = getattr(settings, 'NOTION_REDIRECT_URI', 'https://memory-ai-backend.onrender.com/oauth/notion/callback')
+            print(f"[Notion OAuth] exchange_code_for_token using redirect_uri: {redirect_uri}")
             auth_string = f"{client_id}:{client_secret}"
             import base64
             encoded_auth = base64.b64encode(auth_string.encode()).decode()
-            
             headers = {
                 "Authorization": f"Basic {encoded_auth}",
                 "Content-Type": "application/json"
             }
-            
             data = {
                 "grant_type": "authorization_code",
                 "code": code
                 # 'redirect_uri' omitted as workaround
             }
-            
             response = requests.post(
                 "https://api.notion.com/v1/oauth/token",
                 headers=headers,
                 json=data
             )
-            
             if response.status_code == 200:
                 token_data = response.json()
                 return {
@@ -70,7 +65,6 @@ class NotionService:
                     "workspace_id": token_data.get("workspace_id"),
                     "workspace_name": token_data.get("workspace_name")
                 }
-            
             return {
                 "success": False,
                 "error": f"Token exchange failed: {response.status_code}",
