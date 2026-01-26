@@ -1,0 +1,18 @@
+from fastapi import APIRouter, HTTPException
+from sqlalchemy.orm import Session
+from app.models.user import User
+from app.database import get_db
+
+router = APIRouter()
+
+@router.post("/register")
+def register_user(email: str, username: str, hashed_password: str, db: Session = Depends(get_db)):
+    new_user = User(email=email, username=username, hashed_password=hashed_password)
+    db.add(new_user)
+    try:
+        db.commit()
+        db.refresh(new_user)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"id": new_user.id, "email": new_user.email, "username": new_user.username}
